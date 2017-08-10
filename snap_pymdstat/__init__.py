@@ -7,6 +7,7 @@ import snap_plugin.v1 as snap
 class MdstatCollector(snap.Collector):
 
     def __init__(self, *args):
+        self.hostname = socket.gethostname().lower()
         super(MdstatCollector, self).__init__(*args)
 
     def update_catalog(self, config):
@@ -22,7 +23,6 @@ class MdstatCollector(snap.Collector):
 
         return metrics
 
-
     def collect(self, metrics):
         metrics_return = []
         ts_now = time.time()
@@ -34,6 +34,7 @@ class MdstatCollector(snap.Collector):
                 metric.namespace[3].value = disk_name
                 metric.data = 1 if disk_info['faulty'] else 0
                 metric.timestamp = ts_now
+                metric.tags['host'] = self.hostname
                 metrics_return.append(metric)
 
         return metrics_return
