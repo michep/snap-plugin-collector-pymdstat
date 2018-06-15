@@ -15,7 +15,6 @@ class MdstatCollector(snap.Collector):
         metric = snap.Metric(version=1)
         metric.namespace.add_static_element("mfms")                              # /0
         metric.namespace.add_static_element("mdstat")                            # /1
-        # dynamic elements which are captured from the smartmontool
         metric.namespace.add_dynamic_element("raid", "raid device name")         # /2
         metric.namespace.add_dynamic_element("disk", "raid disk name")           # /3
         metric.namespace.add_static_element("health")                            # /4
@@ -28,6 +27,13 @@ class MdstatCollector(snap.Collector):
         ts_now = time.time()
         md_devs = mdstat.parse()['devices']
         for (md_dev_name, md_dev_info) in md_devs.items():
+            metric = snap.Metric(namespace=[i for i in metrics[0].namespace])
+            metric.namespace[2].value = md_dev_name
+            metric.namespace[3].value = "DISKS"
+            metric.data = md_dev_info["status"]["raid_disks"] - len(md_dev_info["disks"])
+            metric.timestamp = ts_now
+            metric.tags['host'] = self.hostname
+            metrics_return.append(metric)
             for (disk_name, disk_info) in md_dev_info['disks'].items():
                 metric = snap.Metric(namespace=[i for i in metrics[0].namespace])
                 metric.namespace[2].value = md_dev_name
